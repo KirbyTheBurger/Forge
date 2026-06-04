@@ -1,4 +1,4 @@
-use crate::{lexer::config::{Delimiter, LexerConfig}, scanner::{Action, Line}};
+use crate::{lexer::config::{Delimiter, LexerConfig, SplitMode}, scanner::{Action, Line}};
 
 mod config;
 
@@ -33,7 +33,7 @@ impl Lexer {
                             let args = parse_args(&s);
                             let (left, right) = match (args.get(0), args.get(1)) {
                                 (Some(l), Some(r)) => {
-                                    (l.to_string(), r.to_string())
+                                    (l.trim().to_string(), r.trim().to_string())
                                 },
                                 _ => continue,
                             };
@@ -44,7 +44,7 @@ impl Lexer {
                                     self.config.delimiters.insert(delim);
                                 },
                                 Action::Remove => {
-                                    if self.config.delimiters.remove(&delim) == false {
+                                    if !self.config.delimiters.remove(&delim) {
                                         println!("attempted to remove non-existent delimiter");
                                     }
                                 }
@@ -55,6 +55,35 @@ impl Lexer {
                             self.advance();
                             continue;
                         },
+
+                        Line::Split(action, s) => {
+                            let split = match parse_args(&s).get(0) {
+                                Some(s) => s.trim(),
+                                None => continue,
+                            };
+
+                            let splitmode = match split {
+                                "char" => SplitMode::Char,
+                                "whitespace" => SplitMode::Whitespace,
+                                s => SplitMode::Other(s.to_string()),
+                            };
+
+                            match action {
+                                Action::Define => {
+                                    self.config.split.insert(splitmode);
+                                },
+                                Action::Remove => {
+                                    if !self.config.split.remove(&splitmode) {
+                                        println!("attempted to remove non existent splitmode");
+                                    }
+                                }
+                            }
+
+                            println!("{:?}", self.config.split);
+
+                            self.advance();
+                            continue;
+                        }
 
                         _ => todo!(),
                     },

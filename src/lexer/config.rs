@@ -9,7 +9,7 @@ pub struct LexerConfig {
 pub enum SplitMode {
     Char,
     Whitespace,
-    Other(char),
+    Other(String),
 }
 
 #[derive(PartialEq, Eq, Hash, Debug)]
