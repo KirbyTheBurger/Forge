@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub enum Line {
     Rule(Action, String),
     Delimiter(Action, String),
@@ -5,6 +6,7 @@ pub enum Line {
     Code(String),
 }
 
+#[derive(Debug, Clone)]
 pub enum Action {
     Define,
     Remove,

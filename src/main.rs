@@ -1,3 +1,9 @@
+use forge::{lexer::Lexer, scanner::scan};
+
 fn main() {
-    println!("Hello, world!");
+    let lines = scan("^^ ( )".to_string());
+    println!("{:?}", lines);
+    let mut lexer = Lexer::new(lines);
+    let tokens = lexer.tokenize();
+    println!("{:?}", tokens);
 }
