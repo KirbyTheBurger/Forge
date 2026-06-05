@@ -3,13 +3,9 @@ use forge::{lexer::Lexer, scanner::scan};
 fn main() {
     let lines = scan("
 
-    ^^ { }
-    ^^ ( )
-    ^^ [[ ]]
-    ~~ char
+    hello world
     ~~ whitespace
-    ~~ r
-    ~~ 54
+    hello world
 
     ".to_string());
     println!("{:?}", lines);

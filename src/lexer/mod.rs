@@ -1,11 +1,9 @@
-use crate::{lexer::config::{Delimiter, LexerConfig, SplitMode}, scanner::{Action, Line}};
+use crate::{ForgeError, lexer::config::{LexerConfig, SplitMode}, scanner::{Action, Line}};
 
 mod config;
 
 #[derive(Debug)]
-pub enum Token {
-
-}
+pub struct Token(String);
 
 pub struct Lexer {
     config: LexerConfig,
@@ -22,29 +20,40 @@ impl Lexer {
         }
     }
 
-    pub fn tokenize(& mut self) -> Vec<Token> {
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, ForgeError> {
         let mut tokens = vec![];
         
         loop {
-            tokens.push(
+            tokens.extend(
                 match self.current().cloned() {
                     Some(l) => match l {
                         Line::Delimiter(action, s) => {
                             let args = parse_args(&s);
-                            let (left, right) = match (args.get(0), args.get(1)) {
-                                (Some(l), Some(r)) => {
-                                    (l.trim().to_string(), r.trim().to_string())
+                            let (left, right) = match args.get(0) {
+                                Some(s) => {
+                                    match (s.chars().nth(0), s.chars().nth(1)) {
+                                        (Some(l), Some(r)) => {
+                                            (l, r)
+                                        },
+                                        _ => {
+                                            return Err(ForgeError::from(self.pos,
+                                                crate::ForgeErrorKind::InvalidDelim(s.to_string())
+                                            ));
+                                        }
+                                    }
                                 },
-                                _ => continue,
+                                _ => {
+                                    self.advance();
+                                    continue;
+                                },
                             };
 
-                            let delim = Delimiter(left, right);
                             match action {
                                 Action::Define => {
-                                    self.config.delimiters.insert(delim);
+                                    self.config.delimiters.insert(left, right);
                                 },
                                 Action::Remove => {
-                                    if !self.config.delimiters.remove(&delim) {
+                                    if matches!(self.config.delimiters.remove(&right), None) {
                                         println!("attempted to remove non-existent delimiter");
                                     }
                                 }
@@ -65,7 +74,14 @@ impl Lexer {
                             let splitmode = match split {
                                 "char" => SplitMode::Char,
                                 "whitespace" => SplitMode::Whitespace,
-                                s => SplitMode::Other(s.to_string()),
+                                s => match s.chars().nth(0) {
+                                    Some(c) => SplitMode::Other(c),
+                                    None => {
+                                        return Err(ForgeError::from(self.pos,
+                                            crate::ForgeErrorKind::NoSplitMode
+                                        ));
+                                    }
+                                },
                             };
 
                             match action {
@@ -83,7 +99,17 @@ impl Lexer {
 
                             self.advance();
                             continue;
-                        }
+                        },
+
+                        Line::Macro(action, s) => {
+                            todo!()
+                        },
+
+                        Line::Code(s) => {
+                            let tokens = self.tokenize_code(s);
+                            self.advance();
+                            tokens
+                        },
 
                         _ => todo!(),
                     },
@@ -93,7 +119,23 @@ impl Lexer {
             );
         }
 
-        tokens
+        Ok(tokens)
+    }
+
+    fn tokenize_code(&self, code: String) -> Vec<Token> {
+        if self.config.split.contains(&SplitMode::Char) {
+            return code.chars().filter(|c| {
+                !(self.config.split.contains(&SplitMode::Other(*c)) ||
+                (c.is_whitespace() && self.config.split.contains(&SplitMode::Whitespace)))
+            }).map(|c| Token(c.to_string())).collect::<Vec<Token>>();
+        }
+
+        code.split(|c| {
+            self.config.split.contains(&SplitMode::Other(c)) ||
+            (c.is_whitespace() && self.config.split.contains(&SplitMode::Whitespace))
+        })
+        .filter(|s| !s.is_empty())
+        .map(|s| Token(s.to_string())).collect::<Vec<Token>>()
     }
 
     fn advance(&mut self) {

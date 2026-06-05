@@ -1,25 +1,22 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub struct LexerConfig {
     pub split: HashSet<SplitMode>,
-    pub delimiters: HashSet<Delimiter>,
+    pub delimiters: HashMap<char, char>,
 }
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub enum SplitMode {
     Char,
     Whitespace,
-    Other(String),
+    Other(char),
 }
-
-#[derive(PartialEq, Eq, Hash, Debug)]
-pub struct Delimiter(pub String, pub String);
 
 impl LexerConfig {
     pub fn new() -> LexerConfig {
         LexerConfig {
             split: HashSet::new(),
-            delimiters: HashSet::new(),
+            delimiters: HashMap::new(),
         }
     }
 }

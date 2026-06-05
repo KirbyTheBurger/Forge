@@ -1,6 +1,6 @@
 #[derive(Debug, Clone)]
 pub enum Line {
-    Rule(Action, String),
+    Macro(Action, String),
     Delimiter(Action, String),
     Split(Action, String),
     Code(String),
@@ -28,7 +28,7 @@ pub fn scan(input: String) -> Vec<Line> {
         let l = l.trim();
         output.push(
             match l.get(..2) {
-                Some("@@") => Line::Rule(check_action(l), l.to_owned()),
+                Some("@@") => Line::Macro(check_action(l), l.to_owned()),
                 Some("^^") => Line::Delimiter(check_action(l), l.to_owned()),
                 Some("~~") => Line::Split(check_action(l), l.to_owned()),
                 Some(_) if l.is_empty() => continue,
