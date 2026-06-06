@@ -111,7 +111,7 @@ Obviously you can also remove delimiters using `^^/`:
 ```forge
 ^^ ()
 (1)
-^^/
+^^/ ()
 (1)
 ```  
 This produces the tokens `(`, `1`, `)` and `(1)`.  
