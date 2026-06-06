@@ -24,13 +24,22 @@ pub fn scan(input: String) -> Vec<Line> {
     };
 
     let lines: Vec<&str> = input.lines().collect();
+
+    let strip_prefix = |l: &str, prefix: &str| -> String {
+        let without_slash = format!("{}/", prefix);
+        l.trim_start_matches(without_slash.as_str())
+        .trim_start_matches(prefix)
+        .trim_start()
+        .to_owned()
+    };
+
     for l in lines {
         let l = l.trim();
         output.push(
             match l.get(..2) {
-                Some("@@") => Line::Macro(check_action(l), l.to_owned()),
-                Some("^^") => Line::Delimiter(check_action(l), l.to_owned()),
-                Some("~~") => Line::Split(check_action(l), l.to_owned()),
+                Some("@@") => Line::Macro(check_action(l), strip_prefix(l, "@@")),
+                Some("^^") => Line::Delimiter(check_action(l), strip_prefix(l, "^^")),
+                Some("~~") => Line::Split(check_action(l), strip_prefix(l, "~~")),
                 Some(_) if l.is_empty() => continue,
                 Some(_) => Line::Code(l.to_owned()),
                 None if !l.is_empty() => Line::Code(l.to_owned()),

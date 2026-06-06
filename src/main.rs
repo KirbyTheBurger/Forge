@@ -6,6 +6,10 @@ fn main() {
     hello world
     ~~ whitespace
     hello world
+    @@ world => forge
+    ~~/ whitespace
+    hello world
+    @@ hello world => hello forge
 
     ".to_string());
     println!("{:?}", lines);
