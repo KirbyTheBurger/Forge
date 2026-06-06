@@ -1,3 +1,5 @@
+use std::mem;
+
 use crate::{ForgeError, lexer::config::{LexerConfig, SplitMode}, scanner::{Action, Line}};
 
 mod config;
@@ -23,119 +25,137 @@ impl Lexer {
     pub fn tokenize(&mut self) -> Result<Vec<Token>, ForgeError> {
         let mut tokens = vec![];
         
-        loop {
-            tokens.extend(
-                match self.current().cloned() {
-                    Some(l) => match l {
-                        Line::Delimiter(action, s) => {
-                            let args = parse_args(&s);
-                            let (left, right) = match args.get(0) {
-                                Some(s) => {
-                                    match (s.chars().nth(0), s.chars().nth(1)) {
-                                        (Some(l), Some(r)) => {
-                                            (l, r)
-                                        },
-                                        _ => {
-                                            return Err(ForgeError::from(self.pos,
-                                                crate::ForgeErrorKind::InvalidDelim(s.to_string())
-                                            ));
-                                        }
-                                    }
+        while let Some(l) = self.current().cloned() {
+            let new = match l {
+                Line::Delimiter(action, s) => {
+                    let args = parse_args(&s);
+                    let (left, right) = match args.get(0) {
+                        Some(s) => {
+                            match (s.chars().nth(0), s.chars().nth(1)) {
+                                (Some(l), Some(r)) => {
+                                    (l, r)
                                 },
                                 _ => {
-                                    self.advance();
-                                    continue;
-                                },
-                            };
-
-                            match action {
-                                Action::Define => {
-                                    self.config.delimiters.insert(left, right);
-                                },
-                                Action::Remove => {
-                                    if matches!(self.config.delimiters.remove(&right), None) {
-                                        println!("attempted to remove non-existent delimiter");
-                                    }
+                                    return Err(ForgeError::from(self.pos,
+                                        crate::ForgeErrorKind::InvalidDelim(s.to_string())
+                                    ));
                                 }
                             }
-
-                            println!("{:?}", self.config.delimiters);
-
+                        },
+                        _ => {
                             self.advance();
                             continue;
                         },
+                    };
 
-                        Line::Split(action, s) => {
-                            let split = match parse_args(&s).get(0) {
-                                Some(s) => s.trim(),
-                                None => continue,
-                            };
-
-                            let splitmode = match split {
-                                "char" => SplitMode::Char,
-                                "whitespace" => SplitMode::Whitespace,
-                                s => match s.chars().nth(0) {
-                                    Some(c) => SplitMode::Other(c),
-                                    None => {
-                                        return Err(ForgeError::from(self.pos,
-                                            crate::ForgeErrorKind::NoSplitMode
-                                        ));
-                                    }
-                                },
-                            };
-
-                            match action {
-                                Action::Define => {
-                                    self.config.split.insert(splitmode);
-                                },
-                                Action::Remove => {
-                                    if !self.config.split.remove(&splitmode) {
-                                        println!("attempted to remove non existent splitmode");
-                                    }
-                                }
+                    match action {
+                        Action::Define => {
+                            self.config.delimiters.insert(left, right);
+                        },
+                        Action::Remove => {
+                            if matches!(self.config.delimiters.remove(&right), None) {
+                                println!("attempted to remove non-existent delimiter");
                             }
+                        }
+                    }
 
-                            println!("{:?}", self.config.split);
+                    println!("{:?}", self.config.delimiters);
 
-                            self.advance();
-                            continue;
+                    self.advance();
+                    continue;
+                },
+
+                Line::Split(action, s) => {
+                    let split = match parse_args(&s).get(0) {
+                        Some(s) => s.trim(),
+                        None => continue,
+                    };
+
+                    let splitmode = match split {
+                        "char" => SplitMode::Char,
+                        "whitespace" => SplitMode::Whitespace,
+                        s => match s.chars().nth(0) {
+                            Some(c) => SplitMode::Other(c),
+                            None => {
+                                return Err(ForgeError::from(self.pos,
+                                    crate::ForgeErrorKind::NoSplitMode
+                                ));
+                            }
                         },
+                    };
 
-                        Line::Macro(action, s) => {
-                            todo!()
+                    match action {
+                        Action::Define => {
+                            self.config.split.insert(splitmode);
                         },
+                        Action::Remove => {
+                            if !self.config.split.remove(&splitmode) {
+                                println!("attempted to remove non existent splitmode");
+                            }
+                        }
+                    }
 
-                        Line::Code(s) => {
-                            let tokens = self.tokenize_code(s);
-                            self.advance();
-                            tokens
-                        },
+                    println!("{:?}", self.config.split);
 
-                        _ => todo!(),
-                    },
+                    self.advance();
+                    continue;
+                },
 
-                    None => break,
-                }
-            );
+                Line::Macro(action, s) => {
+                    todo!()
+                },
+
+                Line::Code(s) => {
+                    let tokens = self.tokenize_code(s);
+                    self.advance();
+                    tokens
+                },
+            };
+
+            tokens.extend(new);
         }
 
         Ok(tokens)
     }
 
     fn tokenize_code(&self, code: String) -> Vec<Token> {
-        if self.config.split.contains(&SplitMode::Char) {
-            return code.chars().filter(|c| {
-                !(self.config.split.contains(&SplitMode::Other(*c)) ||
-                (c.is_whitespace() && self.config.split.contains(&SplitMode::Whitespace)))
-            }).map(|c| Token(c.to_string())).collect::<Vec<Token>>();
+        let mut tokens = vec![];
+        let mut current = String::new();
+        let mut chars = code.chars().peekable();
+
+        'outer: while let Some(c) = chars.next() {
+            if let Some(&closing) = self.config.delimiters.get(&c) {
+                push_clear_current(&mut tokens, &mut current);
+
+                tokens.push(Token(c.to_string()));
+                let mut delim = String::new();
+                while let Some(&next) = chars.peek() {
+                    chars.next();
+                    if next == closing {
+                        tokens.push(Token(delim));
+                        tokens.push(Token(closing.to_string()));
+                        continue 'outer;
+                    }
+                    delim.push(next);
+                }
+
+                continue;
+            }
+
+            if self.config.split.contains(&SplitMode::Char) {
+                tokens.push(Token(c.to_string()));
+            } else if self.config.split.contains(&SplitMode::Whitespace) && c.is_whitespace() {
+                push_clear_current(&mut tokens, &mut current);
+            } else if self.config.split.contains(&SplitMode::Other(c)) {
+                push_clear_current(&mut tokens, &mut current);
+                tokens.push(Token(c.to_string()));
+            } else {
+                current.push(c);
+            }
         }
 
-        code.split(|c| {
-            self.config.split.contains(&SplitMode::Other(c)) ||
-            (c.is_whitespace() && self.config.split.contains(&SplitMode::Whitespace))
-        })
-        .filter(|s| !s.is_empty())
-        .map(|s| Token(s.to_string())).collect::<Vec<Token>>()
+        push_clear_current(&mut tokens, &mut current);
+        tokens
     }
 
     fn advance(&mut self) {
@@ -149,4 +169,10 @@ impl Lexer {
 
 fn parse_args(s: &String) -> Vec<&str> {
     s.split_whitespace().skip(1).collect()
+}
+
+fn push_clear_current(tokens: &mut Vec<Token>, current: &mut String) {
+    if !current.is_empty() {
+        tokens.push(Token(mem::take(current)));
+    }
 }
