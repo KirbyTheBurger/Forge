@@ -1,19 +1,17 @@
-use forge::{lexer::Lexer, scanner::scan};
+use crate::scanner::Scanner;
+
+mod lexer;
+mod error;
+mod scanner;
 
 fn main() {
-    let lines = scan("
-
-    hello world
-    ~~ whitespace
-    hello world
-    @@ world => forge
-    ~~/ whitespace
-    hello world
-    @@ hello world => hello forge
-
+    let mut scanner = Scanner::new("
+^^/ ( )
+%% ( )
+~~ char
+@@ test => test1
+test
     ".to_string());
+    let lines = scanner.scan();
     println!("{:?}", lines);
-    let mut lexer = Lexer::new(lines);
-    let tokens = lexer.tokenize();
-    println!("{:?}", tokens);
 }
