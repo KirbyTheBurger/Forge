@@ -1,15 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::error::Error;
+use crate::{error::Error, scanner::Line};
 
 pub enum Token {
     Code(String),
 
     MacroDef {
-        left: Vec<Token>,
-        right: Vec<Token>,
+        left: Vec<MacroToken>,
+        right: Vec<MacroToken>,
     },
-    MacroRem(Vec<Token>),
+    MacroRem(Vec<MacroToken>),
 
     GroupDelim {
         def: bool,
@@ -30,18 +30,24 @@ pub struct LexerConfig {
 
 pub struct Lexer {
     config: LexerConfig,
-    input: Vec<char>,
+    output: LexerOutput,
+    input: Vec<Line>,
     pos: usize,
 }
 
+pub struct LexerOutput {
+    tokens: Vec<Token>,
+    gr_delim: HashMap<String, String>,
+}
+
 impl Lexer {
-    pub fn new(input: String) -> Lexer {
+    pub fn new(input: Vec<Line>) -> Lexer {
         Lexer {
             config: LexerConfig {
                 split: HashSet::new(),
                 delim: HashMap::new(),
             },
-            input: input.chars().collect(),
+            input,
             pos: 0,
         }
     }
@@ -49,15 +55,14 @@ impl Lexer {
     pub fn tokenize(&mut self) -> Result<Vec<Token>, Error> {
         let mut tokens = vec![];
 
-        while let Some(&c) = self.current() {
-            tokens.push(self.read_token(c)?);
-            self.advance();
+        while let Some(l) = self.current() {
+            
         }
 
         Ok(tokens)
     }
 
-    pub fn read_token(&mut self, c: char) -> Result<Token, Error> {
+    pub fn read_tokens(&mut self, s: String) -> Result<Vec<Token>, Error> {
         todo!()
     }
 
@@ -65,11 +70,11 @@ impl Lexer {
         self.pos += 1;
     }
 
-    fn current(&self) -> Option<&char> {
+    fn current(&self) -> Option<&Line> {
         self.input.get(self.pos)
     }
 
-    fn next(&mut self) -> Option<&char> {
+    fn next(&mut self) -> Option<&Line> {
         self.advance();
         self.current()
     }
