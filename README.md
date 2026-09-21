@@ -1,7 +1,7 @@
 # Introduction  
 Forge is a language which starts with the absolute bare minimum: rules, macros, and some built in logic.
 Through the use of macros, the user gradually builds a language completely specific to their project.
-You can edit the lexer to behave differently based on rules you set, and macros you define. Do note that all of the things discussed in this documentation are subject to change as Forge is unfinished and some features discussed haven't even been partially implemented.
+You can edit the lexer to behave differently based on rules you set, and macros you define. Do note that all of the things discussed in this documentation are subject to change as Forge is unfinished and some features discussed haven't even been implemented.
 
 # Macros
 Macros are the core functionality of Forge. They are used to rewrite code and define syntax.  
@@ -117,7 +117,7 @@ Obviously you can also remove delimiters using `^^/`:
 This produces the tokens `(`, `1`, `)` and `(1)`.  
   
 # Built in logic  
-As you might know, you can't create anything with absolutely nothing (except if you believe in evolution). Because of this, Forge comes with a few minimal built in things that allow anything to be created.  
+As you might know, you can't create anything from absolutely nothing (except if you're an atheist). Because of this, Forge comes with a few minimal built in things that allow anything to be created.  
   
 ## Numbers and bitwise operations  
 To make manipulating data possible, numbers and bitwise operations are one of the minimal functionalities of Forge. The following bitwise operations are available:  
