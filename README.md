@@ -149,18 +149,29 @@ These are all of the normal bindings and how to define them:
 These operate on the runtime primitive `primitive::num`.
 | Name | Arguments |
 |------|-----------|
-| NOT  | $a        |
-| OR   | $a $b     |
-| AND  | $a $b     |
-| XOR  | $a $b     |
-| LSH  | $a $b     |
-| RSH  | $a $b     |
+| not  | $a        |
+| or   | $a $b     |
+| and  | $a $b     |
+| xor  | $a $b     |
+| lsh  | $a $b     |
+| rsh  | $a $b     |
+Example implementations:
+```
+~~ !
+!! bindings::not $a <= !$a
+!! bindings::lsh $a $b <= $a << $b
+```
 
 ### Arithmetic operations
 Similar to bitwise operations, these also operate on `primitive::num`.
 | Name | Arguments |
 |------|-----------|
-| ADD  | $a $b     |
-| SUB  | $a $b     |
-| MUL  | $a $b     |
-| DIV  | $a $b     |
+| add  | $a $b     |
+| sub  | $a $b     |
+| mul  | $a $b     |
+| div  | $a $b     |
+Example implementations:
+```
+!! bindings::add $a $b <= $a + $b
+!! bindings::mul $a $b <= $a * $b
+```
