@@ -110,4 +110,4 @@ world
 Note that removing a macro that shadowed another will make the macro that was shadowed before take effect.
 
 # Runtime primitves
-As you might know, it's not possible to create anything from absolutely nothing (except if you're an atheist). This is why Forge has runtime primitives. Runtime primitives are a set of fixed, runtime-native definitions of data. You can view this over at [`docs/runtime-primitves.md`](docs/runtime-primitives.md).
+As you might know, it's not possible to create anything from absolutely nothing (except if you're an atheist). This is why Forge has runtime primitives. Runtime primitives are a set of fixed, runtime-native definitions of data. You can view this over at [`docs/bindings.md`](docs/bindings.md).
