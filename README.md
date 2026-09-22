@@ -147,6 +147,7 @@ These are all of the normal bindings and how to define them:
 ### Bitwise operations
 These operate on the runtime primitive `primitive::num`.
 | Name | Arguments |
+|------|-----------|
 | NOT  | $a        |
 | OR   | $a $b     |
 | AND  | $a $b     |
@@ -157,6 +158,7 @@ These operate on the runtime primitive `primitive::num`.
 ### Arithmetic operations
 Similar to bitwise operations, these also operate on `primitive::num`.
 | Name | Arguments |
+|------|-----------|
 | ADD  | $a $b     |
 | SUB  | $a $b     |
 | MUL  | $a $b     |
