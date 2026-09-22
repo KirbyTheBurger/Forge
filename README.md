@@ -129,8 +129,8 @@ As you can see a binding is essentially a reverse macro. A binding can have a va
 
 ## Formatting options
 Below are some formatting options for bindings and what they mean:
-|--------|---------|
 | Syntax | Meaning |
+|--------|---------|
 | x|y    | either x or y |
 | \e     | nothing (empty string/char) |
 
